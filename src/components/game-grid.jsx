@@ -113,9 +113,6 @@ function GameGrid() {
 
   return (
     <div className="container" style={{ width: '24em' }}>
-      <span className="btn" onClick={handleGameReset}>
-        Reset
-      </span>
       <h4 className="text-center">Player {playerTurn} Turn</h4>
       <h3>Winner: {gameWinner} </h3>
       <div className="row">
