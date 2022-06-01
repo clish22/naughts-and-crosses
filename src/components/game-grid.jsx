@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import naught from './310250.svg';
 import cross from './311733.svg';
 import Scoring from './scoring';
 
 function GameGrid() {
-  const initialState = [
+  const [gameSquares, setGameSquares] = useState([
     { id: 1, value: null, imgDisplay: 'none', position: 'topLeft' },
     { id: 2, value: null, imgDisplay: 'none', position: 'topCentre' },
     { id: 3, value: null, imgDisplay: 'none', position: 'topRight' },
@@ -14,10 +14,10 @@ function GameGrid() {
     { id: 7, value: null, imgDisplay: 'none', position: 'bottomLeft' },
     { id: 8, value: null, imgDisplay: 'none', position: 'bottomCentre' },
     { id: 9, value: null, imgDisplay: 'none', position: 'bottomRight' },
-  ];
-
-  const [gameSquares, setGameSquares] = useState(initialState);
+  ]);
   const [playerTurn, setPlayerTurn] = useState(1);
+  const [gamePlayerTurn, setGamePlayerTurn] = useState(1);
+  const [gameWinner, setGameWinner] = useState(null);
 
   const [player1GameScores, setPlayer1GameScores] = useState([]);
   const [player2GameScores, setPlayer2GameScores] = useState([]);
@@ -26,6 +26,8 @@ function GameGrid() {
   const [player2TotalScore, setPlayer2TotalScore] = useState(0);
 
   function handleGameSquareUpdate(square) {
+    if (gameWinner) return;
+
     if (playerTurn === 1 && !square.value) {
       square.value = naught;
       setPlayer1GameScores([...player1GameScores, square.id]);
@@ -36,13 +38,37 @@ function GameGrid() {
       setPlayer2GameScores([...player2GameScores, square.id]);
       setPlayerTurn(1);
     }
-    console.log(player1GameScores, player2GameScores);
     square.imgDisplay = 'inline';
     const updatedGameSquares = [...gameSquares];
     const index = updatedGameSquares.indexOf(square);
     updatedGameSquares[index] = { ...square };
     setGameSquares(updatedGameSquares);
   }
+
+  const handleGameReset = useCallback(() => {
+    setGameSquares([
+      { id: 1, value: null, imgDisplay: 'none', position: 'topLeft' },
+      { id: 2, value: null, imgDisplay: 'none', position: 'topCentre' },
+      { id: 3, value: null, imgDisplay: 'none', position: 'topRight' },
+      { id: 4, value: null, imgDisplay: 'none', position: 'midLeft' },
+      { id: 5, value: null, imgDisplay: 'none', position: 'midCentre' },
+      { id: 6, value: null, imgDisplay: 'none', position: 'midRight' },
+      { id: 7, value: null, imgDisplay: 'none', position: 'bottomLeft' },
+      { id: 8, value: null, imgDisplay: 'none', position: 'bottomCentre' },
+      { id: 9, value: null, imgDisplay: 'none', position: 'bottomRight' },
+    ]);
+
+    if (gamePlayerTurn === 1) {
+      setGamePlayerTurn(2);
+      setPlayerTurn(2);
+    } else {
+      setGamePlayerTurn(1);
+      setPlayerTurn(1);
+    }
+
+    setPlayer1GameScores([]);
+    setPlayer2GameScores([]);
+  }, [gamePlayerTurn]);
 
   useEffect(() => {
     const winningGameCombos = [
@@ -63,29 +89,27 @@ function GameGrid() {
         player1GameScores.includes(winningGameCombos[i][2])
       ) {
         setPlayer1TotalScore((p) => p + 1);
-        console.log('P1 WINS');
-      } else if (
+        setGameWinner('Player 1');
+        console.log(gameWinner);
+        setTimeout(handleGameReset, 2000);
+        setTimeout(() => setGameWinner(null), 2000);
+        setTimeout(() => console.log(gameWinner), 2100);
+      }
+
+      if (
         player2GameScores.includes(winningGameCombos[i][0]) &&
         player2GameScores.includes(winningGameCombos[i][1]) &&
         player2GameScores.includes(winningGameCombos[i][2])
       ) {
-        console.log('P2 WINS');
         setPlayer2TotalScore((p) => p + 1);
-      } else {
-        console.log('no winner yet :(');
+        setGameWinner('Player 2');
+        // console.log(gameWinner);
+        setTimeout(handleGameReset, 2500);
+        setTimeout(() => setGameWinner(null), 2000);
+        // setTimeout(() => console.log(gameWinner), 2100);
       }
     }
-  }, [player1GameScores, player2GameScores]);
-
-  function handleGameReset() {
-    setGameSquares(initialState);
-
-    // if playerTurn last game was 1, then set to 2
-    setPlayerTurn(1);
-
-    setPlayer1GameScores([]);
-    setPlayer2GameScores([]);
-  }
+  }, [handleGameReset, player1GameScores, player2GameScores, gameWinner]);
 
   return (
     <div className="container" style={{ width: '24em' }}>
@@ -93,7 +117,7 @@ function GameGrid() {
         Reset
       </span>
       <h4 className="text-center">Player {playerTurn} Turn</h4>
-      <h3>Winner: </h3>
+      <h3>Winner: {gameWinner} </h3>
       <div className="row">
         {gameSquares.map((square) => {
           return (
