@@ -95,46 +95,42 @@ function GameGrid() {
       [1, 5, 9],
       [3, 5, 7],
     ];
-
     const finishGameTimeout = 2000;
 
-    //create a function that handles the true/false if arguments
-    //accepts different parameters
-    for (let i = 0; i < winningGameCombos.length; i++) {
-      if (
-        player1GameScores.includes(winningGameCombos[i][0]) &&
-        player1GameScores.includes(winningGameCombos[i][1]) &&
-        player1GameScores.includes(winningGameCombos[i][2])
-      ) {
-        setPlayer1TotalScore((p) => p + 1);
-        setGameWinningMsg('Player 1 Wins!');
-        setGameWinningMsgShow();
-        setTimeout(newGame, finishGameTimeout);
-        setTimeout(() => setGameWinningMsg(null), finishGameTimeout);
-        setTimeout(() => setGameWinningMsgShow('none'), finishGameTimeout);
-      } else if (
-        player2GameScores.includes(winningGameCombos[i][0]) &&
-        player2GameScores.includes(winningGameCombos[i][1]) &&
-        player2GameScores.includes(winningGameCombos[i][2])
-      ) {
-        setPlayer2TotalScore((p) => p + 1);
-        setGameWinningMsg('Player 2 Wins!');
-        setGameWinningMsgShow('inline');
-        setTimeout(newGame, finishGameTimeout);
-        setTimeout(() => setGameWinningMsg(null), finishGameTimeout);
-        setTimeout(() => setGameWinningMsgShow('none'), finishGameTimeout);
-      } else if (player1GameScores.length + player2GameScores.length === 9) {
-        setGameWinningMsg('Game Tied!');
-        setGameWinningMsgShow('inline');
-        setTimeout(newGame, finishGameTimeout);
-        setTimeout(() => setGameWinningMsg(null), finishGameTimeout);
-        setTimeout(() => setGameWinningMsgShow('none'), finishGameTimeout);
+    function checkWin(gameScoresArr) {
+      const checkWinArr = [];
+      for (const winningCombo of winningGameCombos) {
+        const checkWinningCombo = winningCombo.every((value) =>
+          gameScoresArr.includes(value)
+        );
+        checkWinArr.push(checkWinningCombo);
       }
+      return checkWinArr.includes(true);
+    }
+
+    if (checkWin(player1GameScores)) {
+      setGameWinningMsg('Player 1 Wins!');
+      setGameWinningMsgShow();
+      setTimeout(newGame, finishGameTimeout);
+      setTimeout(() => setGameWinningMsg(null), finishGameTimeout);
+      setTimeout(() => setGameWinningMsgShow('none'), finishGameTimeout);
+      setPlayer1TotalScore((p) => p + 1);
+    } else if (checkWin(player2GameScores)) {
+      setGameWinningMsg('Player 2 Wins!');
+      setGameWinningMsgShow('inline');
+      setTimeout(newGame, finishGameTimeout);
+      setTimeout(() => setGameWinningMsg(null), finishGameTimeout);
+      setTimeout(() => setGameWinningMsgShow('none'), finishGameTimeout);
+      setPlayer2TotalScore((p) => p + 1);
+    } else if (player1GameScores.length + player2GameScores.length === 9) {
+      setGameWinningMsg('Game Tied!');
+      setGameWinningMsgShow('inline');
+      setTimeout(newGame, finishGameTimeout);
+      setTimeout(() => setGameWinningMsg(null), finishGameTimeout);
+      setTimeout(() => setGameWinningMsgShow('none'), finishGameTimeout);
     }
   }, [newGame, player1GameScores, player2GameScores]);
 
-  //h4 that displays player turn:  display at the start of the game, then set display to none?
-  // or remove once game starts
   return (
     <div className="container" style={{ width: '21em' }}>
       <div className="row">
@@ -153,7 +149,6 @@ function GameGrid() {
           <div>{player2TotalScore}</div>
         </div>
       </div>
-      {/* <h4 className="text-center">Take your turn, Player {playerTurn}</h4> */}
       <div className="row position-relative py-3">
         {gameSquares.map((square) => {
           return (
