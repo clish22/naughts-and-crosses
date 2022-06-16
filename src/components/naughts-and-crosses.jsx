@@ -1,13 +1,15 @@
-import { useCallback, useEffect, useState } from 'react';
-import naught from './310250.svg';
-import cross from './311733.svg';
+// implement:
+// start button
+// count down timer for start of match
+// count down timer for total game time
+// instructions
 
-//bugs:
-//when game ends on tie - still adds points to players total score (noticed with player 1)
-//when game ends on 9th square being click - game says "tie" even though a player won
+import { useCallback, useEffect, useState } from 'react';
+import naught from './naught.svg';
+import cross from './cross.svg';
+import './naughts-and-crosses.css';
 
 function GameGrid() {
-  // change imgDiplsya to a {styles} object/property
   const [gameSquares, setGameSquares] = useState([
     { id: 1, value: null, imgDisplay: 'none', position: 'topLeft' },
     { id: 2, value: null, imgDisplay: 'none', position: 'topCentre' },
@@ -22,14 +24,9 @@ function GameGrid() {
   const [playerTurn, setPlayerTurn] = useState(1);
   const [gamePlayerTurn, setGamePlayerTurn] = useState(1);
   const [gameWinningMsg, setGameWinningMsg] = useState(null);
-
   const [gameWinningMsgShow, setGameWinningMsgShow] = useState('none');
-
-  // refactor: game scores into one array
   const [player1GameScores, setPlayer1GameScores] = useState([]);
   const [player2GameScores, setPlayer2GameScores] = useState([]);
-
-  //refactor: total scores into one array
   const [player1TotalScore, setPlayer1TotalScore] = useState(0);
   const [player2TotalScore, setPlayer2TotalScore] = useState(0);
 
@@ -95,96 +92,95 @@ function GameGrid() {
       [1, 5, 9],
       [3, 5, 7],
     ];
-    const finishGameTimeout = 2000;
 
     function checkWin(gameScoresArr) {
-      const checkWinArr = [];
       for (const winningCombo of winningGameCombos) {
         const checkWinningCombo = winningCombo.every((value) =>
           gameScoresArr.includes(value)
         );
-        checkWinArr.push(checkWinningCombo);
+        if (checkWinningCombo) return true;
       }
-      return checkWinArr.includes(true);
+      return false;
     }
 
-    if (checkWin(player1GameScores)) {
-      setGameWinningMsg('Player 1 Wins!');
+    function updateWin(winMsg) {
+      const finishGameTimeout = 2000;
+      setGameWinningMsg(winMsg);
       setGameWinningMsgShow();
       setTimeout(newGame, finishGameTimeout);
       setTimeout(() => setGameWinningMsg(null), finishGameTimeout);
       setTimeout(() => setGameWinningMsgShow('none'), finishGameTimeout);
+    }
+
+    if (checkWin(player1GameScores)) {
+      updateWin('Player 1 Wins!');
       setPlayer1TotalScore((p) => p + 1);
     } else if (checkWin(player2GameScores)) {
-      setGameWinningMsg('Player 2 Wins!');
-      setGameWinningMsgShow('inline');
-      setTimeout(newGame, finishGameTimeout);
-      setTimeout(() => setGameWinningMsg(null), finishGameTimeout);
-      setTimeout(() => setGameWinningMsgShow('none'), finishGameTimeout);
+      updateWin('Player 2 Wins!');
       setPlayer2TotalScore((p) => p + 1);
     } else if (player1GameScores.length + player2GameScores.length === 9) {
-      setGameWinningMsg('Game Tied!');
-      setGameWinningMsgShow('inline');
-      setTimeout(newGame, finishGameTimeout);
-      setTimeout(() => setGameWinningMsg(null), finishGameTimeout);
-      setTimeout(() => setGameWinningMsgShow('none'), finishGameTimeout);
+      updateWin('Game Tied!');
     }
   }, [newGame, player1GameScores, player2GameScores]);
 
   return (
-    <div className="container" style={{ width: '21em' }}>
-      <div className="row">
-        <div className="col-5 text-start border">
-          <h6>P1</h6>
-          <div>{player1TotalScore}</div>
+    <>
+      <h1 className="text-center py-3">Naughts and Crosses</h1>
+      <div className="container" style={{ width: '21em' }}>
+        <div className="row justify-content-between d-flex align-items-center">
+          <div className="col-4 text-center border border-secondary border-3 rounded-3 bg-light bg-opacity-75">
+            <h6>Player 1</h6>
+            <div>{player1TotalScore}</div>
+          </div>
+          <div
+            onClick={handleGameReset}
+            className="col-2 btn btn-warning p-0 border border-3 border-secondary rounded-3 fw-bold"
+            style={{ lineHeight: 1.5 }}
+          >
+            Reset
+          </div>
+          <div className="col-4 text-center border border-secondary border-3 rounded-3 bg-light bg-opacity-75">
+            <h6>Player 2</h6>
+            <div>{player2TotalScore}</div>
+          </div>
         </div>
-        <div
-          onClick={handleGameReset}
-          className="col-2 text-center btn btn-danger align-middle p-0 border"
-        >
-          Reset
-        </div>
-        <div className="col-5 text-end border">
-          <h6>P2</h6>
-          <div>{player2TotalScore}</div>
+        <div className="row position-relative py-3">
+          {gameSquares.map((square) => {
+            return (
+              <div
+                className="col-4 bg-light bg-opacity-75 border border-secondary border-3 rounded-3 position-relative p-0"
+                style={{ height: '7em' }}
+                key={square.id}
+                onClick={() => handleGameSquareUpdate(square)}
+              >
+                <img
+                  src={square.value}
+                  alt="Naughts and Crosses Symbol"
+                  className="position-absolute top-50 start-50 translate-middle"
+                  style={{
+                    height: '75px',
+                    width: '75px',
+                    display: square.imgDisplay,
+                  }}
+                />
+              </div>
+            );
+          })}
+          <div
+            className="position-absolute top-50 start-50 translate-middle text-center bg-light rounded border border-dark"
+            style={{
+              height: '60px',
+              width: '60%',
+              display: gameWinningMsgShow,
+            }}
+          >
+            <span className="align-middle" style={{ lineHeight: '60px' }}>
+              {gameWinningMsg}
+            </span>
+          </div>
         </div>
       </div>
-      <div className="row position-relative py-3">
-        {gameSquares.map((square) => {
-          return (
-            <div
-              className="col-4 border border-dark position-relative"
-              style={{ height: '7em' }}
-              key={square.id}
-              onClick={() => handleGameSquareUpdate(square)}
-            >
-              <img
-                src={square.value}
-                alt="Naughts and Crosses Symbol"
-                className="position-absolute top-50 start-50 translate-middle"
-                style={{
-                  height: '75px',
-                  width: '75px',
-                  display: square.imgDisplay,
-                }}
-              />
-            </div>
-          );
-        })}
-        <div
-          className="position-absolute top-50 start-50 translate-middle text-center bg-light rounded border border-dark"
-          style={{
-            height: '60px',
-            width: '60%',
-            display: gameWinningMsgShow,
-          }}
-        >
-          <span className="align-middle" style={{ lineHeight: '60px' }}>
-            {gameWinningMsg}
-          </span>
-        </div>
-      </div>
-    </div>
+    </>
   );
 }
 
