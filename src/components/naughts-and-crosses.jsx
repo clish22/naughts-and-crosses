@@ -3,10 +3,14 @@
 // count down timer for start of match
 // count down timer for total game time
 // instructions
+//draw line showing winning combo before displaying win msg
 
 import { useCallback, useEffect, useState } from 'react';
+import axios from 'axios';
+import useSound from 'use-sound';
 import naught from './naught.svg';
 import cross from './cross.svg';
+import pop from './pop.mp3';
 import './naughts-and-crosses.css';
 
 function GameGrid() {
@@ -29,9 +33,18 @@ function GameGrid() {
   const [player2GameScores, setPlayer2GameScores] = useState([]);
   const [player1TotalScore, setPlayer1TotalScore] = useState(0);
   const [player2TotalScore, setPlayer2TotalScore] = useState(0);
+  const [playbackRate, setPlaybackRate] = useState(0.75);
+  const [gameTimer, setGameTimer] = useState(60);
+  const [totalTimer, setTotalTimer] = useState();
+
+  const [play] = useSound(pop, {
+    playbackRate,
+    volume: 0.4,
+  });
 
   function handleGameSquareUpdate(square) {
     if (gameWinningMsg) return;
+    if (square.imgDisplay === 'inline') return;
 
     if (playerTurn === 1 && !square.value) {
       square.value = naught;
@@ -48,6 +61,8 @@ function GameGrid() {
     const index = updatedGameSquares.indexOf(square);
     updatedGameSquares[index] = { ...square };
     setGameSquares(updatedGameSquares);
+    setPlaybackRate(playbackRate + 0.1);
+    play();
   }
 
   const newGame = useCallback(() => {
@@ -73,6 +88,7 @@ function GameGrid() {
 
     setPlayer1GameScores([]);
     setPlayer2GameScores([]);
+    setPlaybackRate(0.75);
   }, [gamePlayerTurn]);
 
   function handleGameReset() {
@@ -121,7 +137,27 @@ function GameGrid() {
     } else if (player1GameScores.length + player2GameScores.length === 9) {
       updateWin('Game Tied!');
     }
+
+    //causes bug - after game end - squares reset after a few seconds when clicked
+    // the useEffect gets run each second, when the gameTimer state changes
+    // if (gameTimer > 0) {
+    //   setTimeout(() => setGameTimer(gameTimer - 1), 1000);
+    // }
+
+    // console.log(gameTimer);
   }, [newGame, player1GameScores, player2GameScores]);
+
+  useEffect(() => {
+    fetchGameGrid();
+  }, []);
+
+  async function fetchGameGrid() {
+    const { data } = await axios.get(
+      'http://localhost:5000/api/v1/naughts-and-crosses'
+    );
+    console.log(data);
+  }
+
 
   return (
     <>
@@ -144,7 +180,7 @@ function GameGrid() {
             <div>{player2TotalScore}</div>
           </div>
         </div>
-        <div className="row position-relative py-3">
+        <div className="row position-relative mt-3">
           {gameSquares.map((square) => {
             return (
               <div
@@ -167,9 +203,9 @@ function GameGrid() {
             );
           })}
           <div
-            className="position-absolute top-50 start-50 translate-middle text-center bg-light rounded border border-dark"
+            className="position-absolute top-50 start-50 translate-middle text-center bg-light rounded border border-dark border-3 fs-5"
             style={{
-              height: '60px',
+              height: '70px',
               width: '60%',
               display: gameWinningMsgShow,
             }}
@@ -179,6 +215,7 @@ function GameGrid() {
             </span>
           </div>
         </div>
+        {/* <div>{gameTimer}</div> */}
       </div>
     </>
   );
